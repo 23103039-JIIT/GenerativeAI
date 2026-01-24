@@ -50,16 +50,41 @@ def cosine_similarity(v1, v2):
         return 0
     return dotProduct / (mag1 * mag2)
 
+# Keyword-based retrieval
+def keyword_retrieval(query):
+    query_words = set(query.lower().translate(translator).split())
+    scores = []
+
+    for doc in documents:
+        doc_words = set(doc.lower().translate(translator).split())
+        match_count = len(query_words.intersection(doc_words))
+        scores.append(match_count)
+    
+    best_index = scores.index(max(scores))
+    return documents[best_index], scores[best_index]
+
 # Compute embeddings for all documents
 docVectors = [sentence_embeddings(doc) for doc in documents]
 
+# Similarity-based retrieval
+def similarity_retrieval(query):
+    query_vec = sentence_embeddings(query)
+    similarities = [cosine_similarity(query_vec, doc_vec) for doc_vec in docVectors]
+    best_index = similarities.index(max(similarities))
+    return documents[best_index], similarities[best_index]
+
 # Accept user query
 query = input("Enter query sentence: ")
-queryVector = sentence_embeddings(query)
+keyword_doc, keyword_score = keyword_retrieval(query)
+similar_doc, similarity_score = similarity_retrieval(query)
 
-# Retrieve most similar document
-similarities = [cosine_similarity(queryVector, docVc) for docVc in docVectors]
-bestMatchIndex = similarities.index(max(similarities))
-print("\nMost Similar Document:")
-print(documents[bestMatchIndex])
-print(f"Similarity Score: {similarities[bestMatchIndex]:.2f}")
+# Comparison
+print("\n--- Retrieval Comparison ---")
+
+print("\nKeyword-Based Retrieval:")
+print("Retrieved Document:", keyword_doc)
+print("Keyword Match Score:", keyword_score)
+
+print("\nSimilarity-Based Retrieval:")
+print("Retrieved Document:", similar_doc)
+print(f"Similarity Score: {similarity_score:.2f}")
